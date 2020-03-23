@@ -48,3 +48,50 @@ void ModifyBodyContext::setModifyBodyOps(string op_str) {
             if (d[i].HasMember(ModifyPosition) && d[i][ModifyPosition].IsString()) {
                   postion = d[i][ModifyPosition].GetString();
             }
+            if (d[i].HasMember(ModifyValue) && d[i][ModifyValue].IsString()) {
+                  value = d[i][ModifyValue].GetString();
+            }
+            if (d[i].HasMember(ModifyType) && d[i][ModifyType].IsString()) {
+                  type = d[i][ModifyType].GetString();
+            }
+            if (d[i].HasMember(ModifyOperation) && d[i][ModifyOperation].IsString()) {
+                  operation = d[i][ModifyOperation].GetString();
+            }
+            ModifyBodyOp op = {postion, value, type, operation};
+
+            modify_body_ops_.push_back(op);
+      }
+      return;
+}
+
+void ModifyBodyContext::onCreate() { logWarn("onCreate" + to_string(id())); }
+
+FilterHeadersStatus ModifyBodyContext::onRequestHeaders(uint32_t s) {
+      logDebug(string("onRequestHeaders ") + to_string(id()));
+
+      auto modify_body_value = getRequestHeader(ModifyBodyHeader);
+      if (modify_body_value != nullptr && !modify_body_value->view().empty()) {
+	    removeRequestHeader(ModifyBodyHeader);
+            setModifyBodyOps(modify_body_value->toString());
+      }
+      return FilterHeadersStatus::Continue;
+}
+
+FilterDataStatus ModifyBodyContext::onRequestBody(size_t body_buffer_length, bool end_of_stream) {
+      auto body = getBufferBytes(BufferType::HttpRequestBody, 0, body_buffer_length);
+      logError(string("onRequestBody ") + string(body->view()));
+      return FilterDataStatus::Continue;
+}
+
+void ModifyBodyContext::onDone() {
+      logWarn("onDone " + to_string(id()));
+}
+
+void ModifyBodyContext::onLog() {
+      logWarn("onLog " + to_string(id()));
+}
+
+void ModifyBodyContext::onDelete() {
+      logWarn("onDelete " + to_string(id()));
+}
+                            
